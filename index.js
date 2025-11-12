@@ -47,6 +47,12 @@ async function run() {
       res.send(listing);
     });
 
+    // 📖 4. Delete one listing by ID
+    app.delete("/listings/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await listingCollection.deleteOne({ _id: new ObjectId(id) });
+      res.send(result);
+    });
     
 
 
