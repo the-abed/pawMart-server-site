@@ -53,6 +53,17 @@ async function run() {
       const result = await listingCollection.deleteOne({ _id: new ObjectId(id) });
       res.send(result);
     });
+
+    // 📖 5. Update one listing by ID
+    app.put("/listings/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedListing = req.body;
+      const result = await listingCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updatedListing }
+      );
+      res.send(result);
+    });
     
 
 
