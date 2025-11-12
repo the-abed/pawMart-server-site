@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 
@@ -11,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@simplecrudserver.fyfvvbn.mongodb.net/?appName=simpleCRUDserver`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@simplecrudserver.fyfvvbn.mongodb.net/?appName=simpleCRUDserver`;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -47,26 +48,26 @@ async function run() {
       res.send(listing);
     });
 
-    // 📖 4. Delete one listing by ID
+    // ✏️ 4. Update listing
+    app.put("/listings/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedData = req.body;
+      const result = await listingCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updatedData }
+      );
+      res.send(result);
+    });
+
+    // ❌ 5. Delete listing
     app.delete("/listings/:id", async (req, res) => {
       const id = req.params.id;
       const result = await listingCollection.deleteOne({ _id: new ObjectId(id) });
       res.send(result);
     });
 
-    // 📖 5. Update one listing by ID
-    app.put("/listings/:id", async (req, res) => {
-      const id = req.params.id;
-      const updatedListing = req.body;
-      const result = await listingCollection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updatedListing }
-      );
-      res.send(result);
-    });
 
-
-    // 6. Orders API 
+    // Orders API 
 app.post("/orders", async (req, res) => {
   try {
     const order = req.body;
@@ -79,7 +80,6 @@ app.post("/orders", async (req, res) => {
     res.status(500).send({ message: "Failed to place order" });
   }
 });
-    
 
 
     console.log("✅ MongoDB Connected Successfully");
