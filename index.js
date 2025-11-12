@@ -64,6 +64,21 @@ async function run() {
       );
       res.send(result);
     });
+
+
+    // 6. Orders API 
+app.post("/orders", async (req, res) => {
+  try {
+    const order = req.body;
+    const db = client.db("pawMartDB");
+    const ordersCollection = db.collection("orders");
+    const result = await ordersCollection.insertOne(order);
+    res.status(201).send(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Failed to place order" });
+  }
+});
     
 
 
