@@ -40,7 +40,14 @@ async function run() {
       res.send(listings);
     });
 
-   
+    // 📖 3. Read one listing by ID
+    app.get("/listings/:id", async (req, res) => {
+      const id = req.params.id;
+      const listing = await listingCollection.findOne({ _id: new ObjectId(id) });
+      res.send(listing);
+    });
+
+    
 
 
     console.log("✅ MongoDB Connected Successfully");
