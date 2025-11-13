@@ -86,7 +86,7 @@ const client = new MongoClient(uri, {
 // }
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     const db = client.db("pawMartDB");
     const listingCollection = db.collection("listings");
     const ordersCollection = db.collection("orders");
@@ -99,18 +99,16 @@ async function run() {
     });
 
     // Insert multiple listings
-   app.post("/listings-many", async (req, res) => {
-  try {
-    const newListings = req.body; // should be an array of objects
-    const result = await listingCollection.insertMany(newListings);
-    res.send(result);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(err.message);
-  }
-});
-
-
+    app.post("/listings-many", async (req, res) => {
+      try {
+        const newListings = req.body; // should be an array of objects
+        const result = await listingCollection.insertMany(newListings);
+        res.send(result);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send(err.message);
+      }
+    });
 
     //   Read all listings
     app.get("/listings", async (req, res) => {
@@ -140,24 +138,61 @@ async function run() {
       }
     });
 
-    // 📖 Read one listing by category
-    app.get("/listings", async (req, res) => {
-      try {
-        const category = req.query.category; // category from frontend
-        let query = {};
 
-        if (category) {
-          // Make sure to match exact category stored in DB
-          query.category = category;
-        }
+    // 🔹 Fetch Pets (Adoption)
+app.get("/categories/pets", async (req, res) => {
+  try {
+    const listings = await listingCollection
+      .find({ category: "Pets" })
+      .toArray();
+    res.status(200).send(listings);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Failed to fetch Pets listings" });
+  }
+});
 
-        const listings = await listingCollection.find(query).toArray();
-        res.send(listings);
-      } catch (err) {
-        console.error("Error fetching listings:", err);
-        res.status(500).send({ message: "Failed to fetch listings" });
-      }
-    });
+// 🔹 Fetch Pet Food
+app.get("/categories/pet-food", async (req, res) => {
+  try {
+    const listings = await listingCollection
+      .find({ category: "Pet Food" })
+      .toArray();
+    res.status(200).send(listings);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Failed to fetch Pet Food listings" });
+  }
+});
+
+// 🔹 Fetch Accessories
+app.get("/categories/accessories", async (req, res) => {
+  try {
+    const listings = await listingCollection
+      .find({ category: "Accessories" })
+      .toArray();
+    res.status(200).send(listings);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Failed to fetch Accessories listings" });
+  }
+});
+
+// 🔹 Fetch Pet Care Products
+app.get("/categories/pet-care-products", async (req, res) => {
+  try {
+    const listings = await listingCollection
+      .find({ category: "Pet Care Products" })
+      .toArray();
+    res.status(200).send(listings);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Failed to fetch Pet Care Products listings" });
+  }
+});
+
+
+    
 
     // 📖  Delete one listing by ID
     app.delete("/listings/:id", async (req, res) => {
@@ -169,19 +204,18 @@ async function run() {
     });
 
     // DELETE all listings
-app.delete("/listings", async (req, res) => {
-  try {
-    const deleteResult = await listingCollection.deleteMany({});
-    res.send({
-      message: "All listings deleted successfully",
-      deletedCount: deleteResult.deletedCount,
+    app.delete("/listings", async (req, res) => {
+      try {
+        const deleteResult = await listingCollection.deleteMany({});
+        res.send({
+          message: "All listings deleted successfully",
+          deletedCount: deleteResult.deletedCount,
+        });
+      } catch (error) {
+        console.error("Error deleting listings:", error);
+        res.status(500).send({ message: "Failed to delete listings" });
+      }
     });
-  } catch (error) {
-    console.error("Error deleting listings:", error);
-    res.status(500).send({ message: "Failed to delete listings" });
-  }
-});
-
 
     // 📖  Update one listing by ID
     app.put("/listings/:id", async (req, res) => {
@@ -208,20 +242,18 @@ app.delete("/listings", async (req, res) => {
       }
     });
 
-    
-   // ✅ GET /myOrders?email=user@example.com
-app.get("/myOrders", async (req, res) => {
-  try {
-    const email = req.query.email; // get from query params
-    const query = email ? { email } : {}; // 👈 match your DB field name
-    const orders = await ordersCollection.find(query).toArray();
-    res.send(orders);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ message: "Failed to fetch orders" });
-  }
-});
-
+    // ✅ GET /myOrders?email=user@example.com
+    app.get("/myOrders", async (req, res) => {
+      try {
+        const email = req.query.email; // get from query params
+        const query = email ? { email } : {}; // 👈 match your DB field name
+        const orders = await ordersCollection.find(query).toArray();
+        res.send(orders);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Failed to fetch orders" });
+      }
+    });
 
     console.log("✅ MongoDB Connected Successfully");
   } catch (err) {
