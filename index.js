@@ -91,20 +91,34 @@ async function run() {
     const listingCollection = db.collection("listings");
     const ordersCollection = db.collection("orders");
 
-    // ✅ 1. Create listing
+    // . Create listing
     app.post("/listings", async (req, res) => {
       const newListing = req.body;
       const result = await listingCollection.insertOne(newListing);
       res.send(result);
     });
 
-    // 📖 2. Read all listings
+    // Insert multiple listings
+   app.post("/listings-many", async (req, res) => {
+  try {
+    const newListings = req.body; // should be an array of objects
+    const result = await listingCollection.insertMany(newListings);
+    res.send(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(err.message);
+  }
+});
+
+
+
+    //   Read all listings
     app.get("/listings", async (req, res) => {
       const listings = await listingCollection.find().toArray();
       res.send(listings);
     });
 
-    // 📖 3. Read one listing by ID
+    //   Read one listing by ID
     app.get("/listings/:id", async (req, res) => {
       const id = req.params.id;
       const listing = await listingCollection.findOne({
@@ -126,8 +140,7 @@ async function run() {
       }
     });
 
-    // 📖 3. Read one listing by category
-    // GET /listings?category=Pets
+    // 📖 Read one listing by category
     app.get("/listings", async (req, res) => {
       try {
         const category = req.query.category; // category from frontend
@@ -146,7 +159,7 @@ async function run() {
       }
     });
 
-    // 📖 4. Delete one listing by ID
+    // 📖  Delete one listing by ID
     app.delete("/listings/:id", async (req, res) => {
       const id = req.params.id;
       const result = await listingCollection.deleteOne({
@@ -155,7 +168,22 @@ async function run() {
       res.send(result);
     });
 
-    // 📖 5. Update one listing by ID
+    // DELETE all listings
+app.delete("/listings", async (req, res) => {
+  try {
+    const deleteResult = await listingCollection.deleteMany({});
+    res.send({
+      message: "All listings deleted successfully",
+      deletedCount: deleteResult.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error deleting listings:", error);
+    res.status(500).send({ message: "Failed to delete listings" });
+  }
+});
+
+
+    // 📖  Update one listing by ID
     app.put("/listings/:id", async (req, res) => {
       const id = req.params.id;
       const updatedListing = req.body;
@@ -166,7 +194,7 @@ async function run() {
       res.send(result);
     });
 
-    //📖 6. Orders API
+    //📖  Orders API
     app.post("/orders", async (req, res) => {
       try {
         const order = req.body;
@@ -180,18 +208,20 @@ async function run() {
       }
     });
 
-    // GET /orders?buyerEmail=user@example.com
-    app.get("/myOrders", async (req, res) => {
-      try {
-        const buyerEmail = req.query.email;
-        const query = buyerEmail ? { buyerEmail } : {};
-        const orders = await ordersCollection.find(query).toArray();
-        res.send(orders);
-      } catch (err) {
-        console.error(err);
-        res.status(500).send({ message: "Failed to fetch orders" });
-      }
-    });
+    
+   // ✅ GET /myOrders?email=user@example.com
+app.get("/myOrders", async (req, res) => {
+  try {
+    const email = req.query.email; // get from query params
+    const query = email ? { email } : {}; // 👈 match your DB field name
+    const orders = await ordersCollection.find(query).toArray();
+    res.send(orders);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Failed to fetch orders" });
+  }
+});
+
 
     console.log("✅ MongoDB Connected Successfully");
   } catch (err) {
