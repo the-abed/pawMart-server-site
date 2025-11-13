@@ -116,6 +116,11 @@ async function run() {
       res.send(listings);
     });
 
+    app.get("/recent-listings", async (req, res) => {
+      const listings = await listingCollection.find().limit(6).toArray();
+      res.send(listings);
+    });
+
     //   Read one listing by ID
     app.get("/listings/:id", async (req, res) => {
       const id = req.params.id;
