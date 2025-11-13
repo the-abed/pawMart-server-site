@@ -138,61 +138,61 @@ async function run() {
       }
     });
 
-
     // 🔹 Fetch Pets (Adoption)
-app.get("/categories/pets", async (req, res) => {
-  try {
-    const listings = await listingCollection
-      .find({ category: "Pets" })
-      .toArray();
-    res.status(200).send(listings);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ message: "Failed to fetch Pets listings" });
-  }
-});
+    app.get("/categories/pets", async (req, res) => {
+      try {
+        const listings = await listingCollection
+          .find({ category: "Pets" })
+          .toArray();
+        res.status(200).send(listings);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Failed to fetch Pets listings" });
+      }
+    });
 
-// 🔹 Fetch Pet Food
-app.get("/categories/pet-food", async (req, res) => {
-  try {
-    const listings = await listingCollection
-      .find({ category: "Pet Food" })
-      .toArray();
-    res.status(200).send(listings);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ message: "Failed to fetch Pet Food listings" });
-  }
-});
+    // 🔹 Fetch Pet Food
+    app.get("/categories/pet-food", async (req, res) => {
+      try {
+        const listings = await listingCollection
+          .find({ category: "Pet Food" })
+          .toArray();
+        res.status(200).send(listings);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Failed to fetch Pet Food listings" });
+      }
+    });
 
-// 🔹 Fetch Accessories
-app.get("/categories/accessories", async (req, res) => {
-  try {
-    const listings = await listingCollection
-      .find({ category: "Accessories" })
-      .toArray();
-    res.status(200).send(listings);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ message: "Failed to fetch Accessories listings" });
-  }
-});
+    // 🔹 Fetch Accessories
+    app.get("/categories/accessories", async (req, res) => {
+      try {
+        const listings = await listingCollection
+          .find({ category: "Accessories" })
+          .toArray();
+        res.status(200).send(listings);
+      } catch (err) {
+        console.error(err);
+        res
+          .status(500)
+          .send({ message: "Failed to fetch Accessories listings" });
+      }
+    });
 
-// 🔹 Fetch Pet Care Products
-app.get("/categories/pet-care-products", async (req, res) => {
-  try {
-    const listings = await listingCollection
-      .find({ category: "Pet Care Products" })
-      .toArray();
-    res.status(200).send(listings);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ message: "Failed to fetch Pet Care Products listings" });
-  }
-});
-
-
-    
+    // 🔹 Fetch Pet Care Products
+    app.get("/categories/pet-care-products", async (req, res) => {
+      try {
+        const listings = await listingCollection
+          .find({ category: "Pet Care Products" })
+          .toArray();
+        res.status(200).send(listings);
+      } catch (err) {
+        console.error(err);
+        res
+          .status(500)
+          .send({ message: "Failed to fetch Pet Care Products listings" });
+      }
+    });
 
     // 📖  Delete one listing by ID
     app.delete("/listings/:id", async (req, res) => {
@@ -219,13 +219,29 @@ app.get("/categories/pet-care-products", async (req, res) => {
 
     // 📖  Update one listing by ID
     app.put("/listings/:id", async (req, res) => {
-      const id = req.params.id;
-      const updatedListing = req.body;
-      const result = await listingCollection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updatedListing }
-      );
-      res.send(result);
+      try {
+        const { id } = req.params;
+        if (!ObjectId.isValid(id))
+          return res.status(400).send({ message: "Invalid listing ID" });
+
+        const updatedListing = req.body;
+        delete updatedListing._id; // prevent _id overwrite
+
+        const result = await listingCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updatedListing }
+        );
+
+        if (result.matchedCount === 0)
+          return res.status(404).send({ message: "Listing not found" });
+
+        res.send({ acknowledged: true, modifiedCount: result.modifiedCount });
+      } catch (err) {
+        console.error(err);
+        res
+          .status(500)
+          .send({ message: "Failed to update listing", error: err.message });
+      }
     });
 
     //📖  Orders API
