@@ -117,7 +117,7 @@ async function run() {
     });
 
     app.get("/recent-listings", async (req, res) => {
-      const listings = await listingCollection.find().limit(6).toArray();
+      const listings = await listingCollection.find().limit(4).toArray();
       res.send(listings);
     });
 
@@ -273,6 +273,63 @@ async function run() {
       } catch (err) {
         console.error(err);
         res.status(500).send({ message: "Failed to fetch orders" });
+      }
+    });
+
+    // Dashboard api
+    // 📊 Dashboard Overview Stats (Aggregate Pipeline)
+    app.get("/dashboard-stats", async (req, res) => {
+      try {
+        // 1. Get basic counts
+        const totalListings = await listingCollection.countDocuments();
+        const totalOrders = await ordersCollection.countDocuments();
+
+        // 2. Aggregate: Revenue & Order Stats
+        const orderStats = await ordersCollection.aggregate([
+          {
+            $group: {
+              _id: null,
+              totalRevenue: { $sum: { $toDouble: "$price" } }, // Assumes price is a string/number
+              avgOrderValue: { $avg: { $toDouble: "$price" } }
+            }
+          }
+        ]).toArray();
+
+        // 3. Aggregate: Listings by Category (Perfect for Pie/Bar Charts)
+        const categoryData = await listingCollection.aggregate([
+          {
+            $group: {
+              _id: "$category",
+              count: { $sum: 1 }
+            }
+          },
+          { $sort: { count: -1 } }
+        ]).toArray();
+
+        // 4. Aggregate: Orders by Date (For Line Charts - Last 7 entries)
+        // Note: This works best if your order objects have a 'date' or 'createdAt' field
+        const salesOverTime = await ordersCollection.aggregate([
+          {
+            $group: {
+              _id: { $substr: ["$date", 0, 10] }, // Groups by YYYY-MM-DD
+              totalSales: { $sum: 1 },
+              income: { $sum: { $toDouble: "$price" } }
+            }
+          },
+          { $sort: { "_id": 1 } },
+          { $limit: 7 }
+        ]).toArray();
+
+        res.send({
+          totalListings,
+          totalOrders,
+          totalRevenue: orderStats[0]?.totalRevenue || 0,
+          categoryData,
+          salesOverTime
+        });
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Failed to fetch dashboard stats" });
       }
     });
 
